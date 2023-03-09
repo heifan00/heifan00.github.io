@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"keaijing.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="摘要索引是辅助存储引擎高效获取数据的一种数据结构。形象的说索引就是数据的目录，便于存储引擎快速的定位数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL索引">
+<meta property="og:url" content="https://keaijing.com/Java/mysql_index/">
+<meta property="og:site_name" content="可爱静">
+<meta property="og:description" content="摘要索引是辅助存储引擎高效获取数据的一种数据结构。形象的说索引就是数据的目录，便于存储引擎快速的定位数据。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-17T14:10:50.000Z">
+<meta property="article:modified_time" content="2023-03-08T12:39:14.880Z">
+<meta property="article:author" content="HiF">
+<meta property="article:tag" content="MySQL">
+<meta property="article:tag" content="索引">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://keaijing.com/Java/mysql_index/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MySQL索引 | 可爱静</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">可爱静</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录生活、学习和工作</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://keaijing.com/Java/mysql_index/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HiF">
+      <meta itemprop="description" content="每个人都有自己的本质，放在合适的地方就大放光彩。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="可爱静">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL索引
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-17 22:10:50" itemprop="dateCreated datePublished" datetime="2022-01-17T22:10:50+08:00">2022-01-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-03-08 20:39:14" itemprop="dateModified" datetime="2023-03-08T20:39:14+08:00">2023-03-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h3><p>索引是辅助存储引擎高效获取数据的一种数据结构。形象的说索引就是数据的目录，便于存储引擎快速的定位数据。</p>
+ <span id="more"></span> 
+
+<h4 id="索引的分类"><a href="#索引的分类" class="headerlink" title="索引的分类"></a>索引的分类</h4><h5 id="从数据结构角度"><a href="#从数据结构角度" class="headerlink" title="从数据结构角度"></a>从数据结构角度</h5><ul>
+<li>B+tree</li>
+<li>Hash</li>
+<li>Full-text</li>
+</ul>
+<h5 id="从物理存储角度"><a href="#从物理存储角度" class="headerlink" title="从物理存储角度"></a>从物理存储角度</h5><ul>
+<li>聚簇索引</li>
+<li>二级索引（辅助索引）</li>
+</ul>
+<h5 id="从索引字段特性角度"><a href="#从索引字段特性角度" class="headerlink" title="从索引字段特性角度"></a>从索引字段特性角度</h5><ul>
+<li>主键索引</li>
+<li>唯一索引</li>
+<li>普通索引</li>
+<li>前缀索引</li>
+</ul>
+<h5 id="从组成索引的字段个数角度"><a href="#从组成索引的字段个数角度" class="headerlink" title="从组成索引的字段个数角度"></a>从组成索引的字段个数角度</h5><ul>
+<li>单列索引</li>
+<li>联合索引（复合索引）</li>
+</ul>
+<h4 id="MySQL常见的存储引擎"><a href="#MySQL常见的存储引擎" class="headerlink" title="MySQL常见的存储引擎"></a>MySQL常见的存储引擎</h4><table>
+<thead>
+<tr>
+<th></th>
+<th>InnoDB</th>
+<th>MyISAM</th>
+<th>Memory</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>B+tree 索引</td>
+<td>YES</td>
+<td>YES</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Hash 索引</td>
+<td>NO</td>
+<td>NO</td>
+<td>YES</td>
+</tr>
+<tr>
+<td>Full-text 索引</td>
+<td>YES</td>
+<td>YES</td>
+<td>NO</td>
+</tr>
+</tbody></table>
+<p>在实际使用中，InnoDB 作为 MySQL 建表时默认的存储引擎；B+tree 是 MySQL 中被存储引擎采用最多的索引类型。</p>
+<h4 id="B-tree和B-tree"><a href="#B-tree和B-tree" class="headerlink" title="B+tree和B-tree"></a>B+tree和B-tree</h4><blockquote>
+<p>1970 年，R.Bayer 和 E.Mccreight 提出了一种适用于外查找的平衡多叉树——B-树，磁盘管理系统中的目录管理，以及数据库系统中的索引组织多数采用 B-Tree 这种数据结构。–数据结构 C 语言版第二版 严蔚敏</p>
+</blockquote>
+<p>B+tree 只在叶子节点存储数据，而 B-tree 非叶子节点也存储数据。</p>
+<p>在线测试</p>
+<ul>
+<li>B-tree : <code>https://www.cs.usfca.edu/~galles/visualization/BTree.html</code></li>
+<li>B+tree : <code>https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html</code></li>
+</ul>
+<h4 id="B-tree和红黑树"><a href="#B-tree和红黑树" class="headerlink" title="B+tree和红黑树"></a>B+tree和红黑树</h4><p>对于有 N 个叶子节点的 B+tree，搜索复杂度为 <strong>「O(logdN) ,d 是指 degree 是指 B+tree 的度」</strong>，表示节点允许的最大子节点个数为 d 个，在实际的运用中 d 值是大于 100 的，即使数据达到千万级别时候 B+tree 的高度依然维持在 3-4 左右，保证了 3-4 次磁盘 I/O 就能查到目标数据。</p>
+<p>红黑树是二叉树，节点的子节点个数最多为 2 个，意味着其搜索复杂度为 <strong>「O(logN)」</strong>，比 B+ 树高出不少，因此红黑树检索到目标数据所需经理的磁盘 I/O 次数更多。</p>
+<h4 id="B-tree-索引与-Hash-索引"><a href="#B-tree-索引与-Hash-索引" class="headerlink" title="B+tree 索引与 Hash 索引"></a>B+tree 索引与 Hash 索引</h4><p>如果是等价查询，则哈希索引显然具有绝对优势，因为只需一种算法即可找到相应的键值；当然，前提是键值是唯一的,如果存在hash冲突就必须链表遍历了。</p>
+<p>哈希索引不支持范围查询(不过改造之后可以,Java中的LinkedHashMap通过链表保存了节点的插入顺序,那么也可以使用链表将数据的大小顺序保存起来)。</p>
+<p>哈希索引无法使用索引排序以及模糊匹配；<br>哈希索引也不支持多列联合索引的最左边匹配规则；<br>键值大量冲突的情况下,Hash索引效率极低。</p>
+<h4 id="InnoDB"><a href="#InnoDB" class="headerlink" title="InnoDB"></a>InnoDB</h4><p>InnoDB 表要求必须有聚簇索引，默认在主键字段上建立聚簇索引，在没有主键字段的情况下，表的第一个 NOT NULL 的唯一索引将被建立为聚簇索引，在前两者都没有的情况下，InnoDB 将自动生成一个隐式自增 id 列并在此列上创建聚簇索引。</p>
+<p>二级索引的叶子节点并不存储一行完整的表数据，而是存储了聚簇索引所在列的值。</p>
+<p>说了聚簇索引和二级索引 肯定要提到「回表查询」。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> workers <span class="keyword">add</span> index index_name(name);</span><br></pre></td></tr></table></figure>
+
+<p>由于二级索引的叶子节点不存储完整的表数据，所以当通过二级索引查询到聚簇索引的列值后，还需要回到局促索引也就是表数据本身进一步获取数据。</p>
+<p>需要注意的是通过二级索引查询时，回表不是必须的过程，当 Query 的所有字段在二级索引中就能找到时，就不需要回表，MySQL 称此时的二级索引为覆盖索引或称触发了 「索引覆盖」。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> id,name <span class="keyword">from</span> workers <span class="keyword">where</span> name<span class="operator">=</span><span class="string">&#x27;吕归尘&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这句 SQL 只查询了 id，和 name，二级索引就已经包含了 Query 所以需要的所有字段，就无需回表查询。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain <span class="keyword">select</span> id,name <span class="keyword">from</span> workers <span class="keyword">where</span> name<span class="operator">=</span><span class="string">&#x27;吕归尘&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>执行计划的 Extra 字段中出现了 Using where;Using index 表明查询触发了索引 index_name 的索引覆盖，且对索引做了 where 筛选，这里不需要回表。</p>
+<p>Extra 为 Using Index Condition 表示会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行。Index Condition Pushdown (ICP)是 MySQL 5.6 以上版本中的新特性，是一种在存储引擎层使用索引过滤数据的一种优化方式。ICP 开启时的执行计划含有 Using index condition 标示 ，表示优化器使用了 ICP 对数据访问进行优化。</p>
+<p>不考虑 ICP 对数据访问的优化，当关闭 ICP 时，Index 仅仅是 data access 的一种访问方式，存储引擎通过索引回表获取的数据会传递到 MySQL Server 层进行 WHERE 条件过滤。</p>
+<p>Extra 为 Using where 只是提醒我们 MySQL 将用 where 子句来过滤结果集。这个一般发生在 MySQL 服务器，而不是存储引擎层。一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。</p>
+<p>这里表明没有触发索引覆盖，进行回表查询。</p>
+<h4 id="MyISAM"><a href="#MyISAM" class="headerlink" title="MyISAM"></a>MyISAM</h4><p>以 MyISAM 存储引擎存储的表不存在聚簇索引。MyISAM 表中的主键索引和非主键索引的结构是一样的。他们的叶子节点是不存储表数据的，节点中存放的是表数据的地址，所以 MyISAM 表可以没有主键。MyISAM 表的数据和索引是分开的，是单独存放的。</p>
+<p>MyISAM 表中的主键索引和非主键索引的区别仅在于主键索引 B+tree 上的 key 必须符合主键的限制，非主键索引 B+tree 上的 key 只要符合相应字段的特性就可以了。</p>
+<h4 id="主键索引"><a href="#主键索引" class="headerlink" title="主键索引"></a>主键索引</h4><ul>
+<li>建立在主键字段上的索引</li>
+<li>一张表最多有一个主键索引</li>
+<li>索引列值不允许为null</li>
+<li>通常在创建表的时候一起创建</li>
+</ul>
+<h4 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h4><ul>
+<li>建立在 UNIQUE 字段上的索引就是唯一索引</li>
+<li>一张表可以有多个唯一索引，索引列值允许为 null</li>
+</ul>
+<h4 id="普通索引"><a href="#普通索引" class="headerlink" title="普通索引"></a>普通索引</h4><ul>
+<li>建立在普通字段上的索引叫做普通索引，没有主键限制</li>
+</ul>
+<h4 id="前缀索引"><a href="#前缀索引" class="headerlink" title="前缀索引"></a>前缀索引</h4><ul>
+<li>前缀索引是指对字符串的前几个字符或对二进制类型字段的前几个bytes建立的索引，而不是在整个字段上建索引。</li>
+<li>前缀索引可以建立在类型为：char、varchar、binary、verbinary的列上，可以大大减少索引占用的存储空间，也能提升索引的查询效率。</li>
+</ul>
+<h4 id="联合索引"><a href="#联合索引" class="headerlink" title="联合索引"></a>联合索引</h4><ul>
+<li>联合索引是一个索引结构，这两个条目表示的是组合索引中字段的具体信息，按建立索引时的书写顺序排序。</li>
+<li>组合索引的非叶子节点保存了两个字段的值作为 B+tree 的 key 值，当 B+tree 上插入数据时，先按字段 id 比较，在 id 相同的情况下按 name 字段比较。</li>
+</ul>
+<h4 id="查看索引命令"><a href="#查看索引命令" class="headerlink" title="查看索引命令"></a>查看索引命令</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> index <span class="keyword">from</span> tableName</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+              <a href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag"># 索引</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Collections/resist/" rel="prev" title="应该抵制的品牌">
+      <i class="fa fa-chevron-left"></i> 应该抵制的品牌
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/Java/jjwt_demo/" rel="next" title="JJWT框架的使用">
+      JJWT框架的使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%91%98%E8%A6%81"><span class="nav-number">1.</span> <span class="nav-text">摘要</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E7%9A%84%E5%88%86%E7%B1%BB"><span class="nav-number">1.1.</span> <span class="nav-text">索引的分类</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E8%A7%92%E5%BA%A6"><span class="nav-number">1.1.1.</span> <span class="nav-text">从数据结构角度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%8E%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E8%A7%92%E5%BA%A6"><span class="nav-number">1.1.2.</span> <span class="nav-text">从物理存储角度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%8E%E7%B4%A2%E5%BC%95%E5%AD%97%E6%AE%B5%E7%89%B9%E6%80%A7%E8%A7%92%E5%BA%A6"><span class="nav-number">1.1.3.</span> <span class="nav-text">从索引字段特性角度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%8E%E7%BB%84%E6%88%90%E7%B4%A2%E5%BC%95%E7%9A%84%E5%AD%97%E6%AE%B5%E4%B8%AA%E6%95%B0%E8%A7%92%E5%BA%A6"><span class="nav-number">1.1.4.</span> <span class="nav-text">从组成索引的字段个数角度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MySQL%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="nav-number">1.2.</span> <span class="nav-text">MySQL常见的存储引擎</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B-tree%E5%92%8CB-tree"><span class="nav-number">1.3.</span> <span class="nav-text">B+tree和B-tree</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B-tree%E5%92%8C%E7%BA%A2%E9%BB%91%E6%A0%91"><span class="nav-number">1.4.</span> <span class="nav-text">B+tree和红黑树</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#B-tree-%E7%B4%A2%E5%BC%95%E4%B8%8E-Hash-%E7%B4%A2%E5%BC%95"><span class="nav-number">1.5.</span> <span class="nav-text">B+tree 索引与 Hash 索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#InnoDB"><span class="nav-number">1.6.</span> <span class="nav-text">InnoDB</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MyISAM"><span class="nav-number">1.7.</span> <span class="nav-text">MyISAM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E9%94%AE%E7%B4%A2%E5%BC%95"><span class="nav-number">1.8.</span> <span class="nav-text">主键索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E7%B4%A2%E5%BC%95"><span class="nav-number">1.9.</span> <span class="nav-text">唯一索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E7%B4%A2%E5%BC%95"><span class="nav-number">1.10.</span> <span class="nav-text">普通索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%89%8D%E7%BC%80%E7%B4%A2%E5%BC%95"><span class="nav-number">1.11.</span> <span class="nav-text">前缀索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%94%E5%90%88%E7%B4%A2%E5%BC%95"><span class="nav-number">1.12.</span> <span class="nav-text">联合索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%B4%A2%E5%BC%95%E5%91%BD%E4%BB%A4"><span class="nav-number">1.13.</span> <span class="nav-text">查看索引命令</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HiF</p>
+  <div class="site-description" itemprop="description">每个人都有自己的本质，放在合适的地方就大放光彩。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">HiF</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">83k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:16</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
