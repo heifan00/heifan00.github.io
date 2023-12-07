@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>多模块Springboot项目引入本地JAR包</title>
+      <link href="/Java/springboot_local_jar/"/>
+      <url>/Java/springboot_local_jar/</url>
+      
+        <content type="html"><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>现有多模块项目，需对接聚水潭开放平台，实现数据交互。</p><span id="more"></span> <h2 id="准备好JAR包"><a href="#准备好JAR包" class="headerlink" title="准备好JAR包"></a>准备好JAR包</h2><p>我这里用到的是聚水潭的<a href="https://openweb.jushuitan.com/doc?docId=60">JAVA SDK</a>，下载到本地后建议改名。<br /><img src="https://oss.keaijing.com/oss/kaj/JAR%E5%8C%85%E9%87%8D%E5%91%BD%E5%90%8D.png" alt="JAR包重命名.png"></p><h2 id="放入项目中"><a href="#放入项目中" class="headerlink" title="放入项目中"></a>放入项目中</h2><p>因为是子模块用到了该JAR包，所以我将JAR包放在了子模块目录下。<br />新建lib目录，将JAR复制进去。<br /><img src="https://oss.keaijing.com/oss/kaj/JAR%E5%8C%85%E5%AD%98%E6%94%BE%E4%BD%8D%E7%BD%AE.png" alt="JAR包存放位置.png"></p><h2 id="修改子模块POM文件，添加依赖"><a href="#修改子模块POM文件，添加依赖" class="headerlink" title="修改子模块POM文件，添加依赖"></a>修改子模块POM文件，添加依赖</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.jushuitan<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jushuitan<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">scope</span>&gt;</span>system<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">systemPath</span>&gt;</span>$&#123;basedir&#125;/lib/jushuitan-0.0.1.jar<span class="tag">&lt;/<span class="name">systemPath</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure><p>此时在IDEA里运行项目应该是正常的。<br />但是打包后运行JAR包，会报错找不到引入本地JAR中的类。</p><h2 id="将本地JAR包打入运行包内"><a href="#将本地JAR包打入运行包内" class="headerlink" title="将本地JAR包打入运行包内"></a>将本地JAR包打入运行包内</h2><p>在Application启动类所在的模块里，修改POM文件，添加配置。只在此模块配置一次，其他模块不用配置。</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                    <span class="comment">&lt;!-- 配置打包包括本地JAR包 --&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">includeSystemScope</span>&gt;</span>true<span class="tag">&lt;/<span class="name">includeSystemScope</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure><p>刷新Maven，重新打包运行。</p><h2 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h2><p>提交代码之前，记得右键该JAR包-&gt;Git-&gt;Add；因为<strong>gitignore</strong>文件里会把*.jar给忽略掉。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> SpringBoot </tag>
+            
+            <tag> Maven </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>SpringBoot实现多数据源，动态切换数据源</title>
       <link href="/Java/springboot_dynmic/"/>
       <url>/Java/springboot_dynmic/</url>
