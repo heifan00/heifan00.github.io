@@ -482,31 +482,6 @@
     
     
     <entry>
-      <title>GateWay总结</title>
-      <link href="/Java/gateway/"/>
-      <url>/Java/gateway/</url>
-      
-        <content type="html"><![CDATA[<h3 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h3><ul><li>使用Nacos实现服务的注册与发现</li><li>消费者访问指定路径，gateway会根据配置信息路由到指定服务下的指定路径</li></ul> <span id="more"></span> <h3 id="添加依赖"><a href="#添加依赖" class="headerlink" title="添加依赖"></a>添加依赖</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--gateway 网关依赖--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-gateway<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure><h3 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h3><ol><li>服务提供方将自己注册到Nacos；</li><li>在gateway子项目配置文件里配置路径；</li><li>访问指定路径时实现路由功能。</li></ol><h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">nacos:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">server-addr:</span> <span class="string">localhost:8848</span></span><br><span class="line">        <span class="attr">namespace:</span> <span class="string">xxxxxx-ee03-4421-8ba5-d4d7a9d25caa</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">metadata:</span></span><br><span class="line">          <span class="attr">management:</span></span><br><span class="line">            <span class="attr">context-path:</span> <span class="string">$&#123;server.servlet.context-path&#125;/provider</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">locator:</span></span><br><span class="line">          <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">id:</span> <span class="string">test_route</span> <span class="comment"># 路由测试</span></span><br><span class="line">          <span class="attr">uri:</span> <span class="string">lb://developer-provider</span></span><br><span class="line">          <span class="attr">predicates:</span> <span class="comment"># 断言</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">Path=/api/v1/gateway/**</span></span><br><span class="line">          <span class="attr">filters:</span> <span class="comment"># 过滤器</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">StripPrefix=3</span> <span class="comment"># StripPrefix参数表示在将请求发送到下游之前从请求中剥离的路径个数</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">PreserveHostHeader</span> <span class="comment"># 防止host被修改为localhost</span></span><br><span class="line"><span class="attr">logging:</span></span><br><span class="line">  <span class="attr">config:</span> <span class="string">classpath:logback-dev.xml</span></span><br><span class="line"></span><br></pre></td></tr></table></figure><h3 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h3><p>访问localhost:17788/api/v1/gateway/test会被路由到localhost:27788/provider/test</p>]]></content>
-      
-      
-      <categories>
-          
-          <category> Java </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> gateway </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>SaaS应用管理文档</title>
       <link href="/Java/saas_app_doc/"/>
       <url>/Java/saas_app_doc/</url>
@@ -524,6 +499,31 @@
         <tags>
             
             <tag> SaaS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>GateWay总结</title>
+      <link href="/Java/gateway/"/>
+      <url>/Java/gateway/</url>
+      
+        <content type="html"><![CDATA[<h3 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h3><ul><li>使用Nacos实现服务的注册与发现</li><li>消费者访问指定路径，gateway会根据配置信息路由到指定服务下的指定路径</li></ul> <span id="more"></span> <h3 id="添加依赖"><a href="#添加依赖" class="headerlink" title="添加依赖"></a>添加依赖</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--gateway 网关依赖--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-gateway<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure><h3 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h3><ol><li>服务提供方将自己注册到Nacos；</li><li>在gateway子项目配置文件里配置路径；</li><li>访问指定路径时实现路由功能。</li></ol><h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">nacos:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">server-addr:</span> <span class="string">localhost:8848</span></span><br><span class="line">        <span class="attr">namespace:</span> <span class="string">xxxxxx-ee03-4421-8ba5-d4d7a9d25caa</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">metadata:</span></span><br><span class="line">          <span class="attr">management:</span></span><br><span class="line">            <span class="attr">context-path:</span> <span class="string">$&#123;server.servlet.context-path&#125;/provider</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">locator:</span></span><br><span class="line">          <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">id:</span> <span class="string">test_route</span> <span class="comment"># 路由测试</span></span><br><span class="line">          <span class="attr">uri:</span> <span class="string">lb://developer-provider</span></span><br><span class="line">          <span class="attr">predicates:</span> <span class="comment"># 断言</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">Path=/api/v1/gateway/**</span></span><br><span class="line">          <span class="attr">filters:</span> <span class="comment"># 过滤器</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">StripPrefix=3</span> <span class="comment"># StripPrefix参数表示在将请求发送到下游之前从请求中剥离的路径个数</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">PreserveHostHeader</span> <span class="comment"># 防止host被修改为localhost</span></span><br><span class="line"><span class="attr">logging:</span></span><br><span class="line">  <span class="attr">config:</span> <span class="string">classpath:logback-dev.xml</span></span><br><span class="line"></span><br></pre></td></tr></table></figure><h3 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h3><p>访问localhost:17788/api/v1/gateway/test会被路由到localhost:27788/provider/test</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> gateway </tag>
             
         </tags>
       
