@@ -536,31 +536,6 @@
     
     
     <entry>
-      <title>SaaS应用管理文档</title>
-      <link href="/Java/saas_app_doc/"/>
-      <url>/Java/saas_app_doc/</url>
-      
-        <content type="html"><![CDATA[<h3 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h3><blockquote><p>ACL：基于角色级别的权限控制</p></blockquote> <span id="more"></span> <p>ACL（Access Control List）：将系统的各种权限直接授予具体的用户。抽象来说，为每个用户维护了单独的权限列表，当需要分配权限、收回权限时，需要修改对应用户的权限信息。</p><h3 id="1-数据库设计"><a href="#1-数据库设计" class="headerlink" title="1. 数据库设计"></a>1. 数据库设计</h3><ul><li>opn_app(应用表)：包含应用名称、应用状态、排序；</li><li>opn_app_clazz(应用分类表)：包含分类名称、分类状态、排序；</li><li>opn_app_clazz_ref_app(应用分类关联表)：应用id、分类id；</li><li>opn_app_detail(应用详情表)：维护信息、应用图片、应用属性、网站域名、网站地址、网站额外参数等。</li></ul><h3 id="2-数据库设计"><a href="#2-数据库设计" class="headerlink" title="2. 数据库设计"></a>2. 数据库设计</h3><ul><li>按照原型图分为应用清单和应用维护两部分</li><li>应用清单<ol><li>应用清单：传入分页信息，获取并返回所有应用；</li><li>新增应用：传入应用信息，（在进入manager层之前应将数据对象准备好，不然开启事务后数据库压力大）在manager层开启事务，同步新增opn_app、opn_app_detail和opn_app_clazz_ref_app表；先INSERT opn_app表，id为自动增长（插入后，自动增长的id会包装到对象里）；然后INSERT opn_app_detail表，id为自动增长，appid为opn_app自增长的id；最后INSERT opn_app_clazz_ref_app表，插入appId和clazzId（默认为0）。返回操作状态码；</li><li>更新应用：与新增应用接口类似，传入封装对象中塞入了应用id，不同的是只需要更新opn_app、opn_app_detail两张表，先根据传入的id和信息更新opn_app表，然后根据id查询出appId为id的opn_app_detail对象，并根据传入的信息更新它；最后返回状态码。</li><li>应用详情：传入应用id，根据应用id查询opn_app表和opn_app_detail表（appId），返回状态码以及封装的对象。</li></ol></li><li>应用维护<ol><li>分类清单：获取分类信息，查询opn_app_clazz表中所有信息，返回list。</li><li>应用列表：根据clazzId查询分类下的应用信息，共需查询opn_app_clazz_ref_app、opn_app和opn_app_detail表。先根据clazzId，查询出opn_app_clazz_ref_app表内的appIds；然后遍历appIds依次查询opn_app和opn_app_detail表，返回list。</li><li>应用详情：传入应用id，查询opn_app和opn_app_detail表，返回应用名称、应用状态、维护信息、排序等信息。</li><li>修改分类：传入应用id和clazzId，更新opn_app_clazz_ref_app表，返回操作状态码。</li><li>详情编辑：传入包装类，根据传入的对象更新opn_app和opn_app_detail表，返回操作结果。</li></ol></li></ul><h3 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h3><pre><code> 1. 数据库设计部分  * 表名：要注意前缀，同一模块的表应该相邻；简明知意，不要使用容易混淆的单词，必要时可使用别名，例如应用分类关联表，“分类”使用常用单词标记（class别名clazz，不应用sort表明类别，易于排序混淆）；  * 表字段：每张表格在设计字段的时候都应该具有五个基础字段（id,is_enable,create_time,update_time,update_usr_id）主键id；is_enable该行数据是否有效，0无效，1有效，设计为bit类型，默认值为b&#39;1&#39;；create_time,update_time创建时间和更新时间，存放时间戳，设计为bigint类型，长度为20。注意：在一些表示类型的字段上，一般设计为tinyint类型长度为1，但代码生成器会将该字段识别为Boolean类型，为了应对经常变化的业务需求，一般将其改为Integer类型。 2. 接口设计部分 * Controller层供前端调用，接口分布应与原型相对应； * 接口数量约少越好，插入、更新可以在一个接口里实现； * Controller层返回值类型不重要，可以统一写为Object； * Controller层只return service层的执行结果，返回结果包装可在service执行。</code></pre><h3 id="4-重点"><a href="#4-重点" class="headerlink" title="4. 重点"></a>4. 重点</h3><ol><li><p>service层只做参数校验，多表操作开启事务在manager层做；</p></li><li><p>在新增、更新和搜索等需要在文本框内输入的接口，在service层需要做防止xss注入操作（hutool：htmlFilter()方法）；</p></li><li><p>使用mybatis-plus插件，更新和插入的操作应当使用BaseMapper自带的insert和update，因为这样可以应对多变的需求及减少bug；</p></li><li><p>使用mybatis-plus插件向数据库插入一条id自增的数据，如果在生成代码阶段没有设置id为自动增长，那么插入数据库的id字段将会为很长的一段雪花值，是因为实体类id字段上没有正确添加注解，mybatis-plus默认为雪花值id；</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 分类id</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="meta">@TableId(value = &quot;id&quot;, type = IdType.AUTO)</span></span><br><span class="line">   <span class="keyword">private</span> Long id;</span><br><span class="line">   </span><br></pre></td></tr></table></figure></li></ol>]]></content>
-      
-      
-      <categories>
-          
-          <category> Java </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> SaaS </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>GateWay总结</title>
       <link href="/Java/gateway/"/>
       <url>/Java/gateway/</url>
@@ -578,6 +553,31 @@
         <tags>
             
             <tag> gateway </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>SaaS应用管理文档</title>
+      <link href="/Java/saas_app_doc/"/>
+      <url>/Java/saas_app_doc/</url>
+      
+        <content type="html"><![CDATA[<h3 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h3><blockquote><p>ACL：基于角色级别的权限控制</p></blockquote> <span id="more"></span> <p>ACL（Access Control List）：将系统的各种权限直接授予具体的用户。抽象来说，为每个用户维护了单独的权限列表，当需要分配权限、收回权限时，需要修改对应用户的权限信息。</p><h3 id="1-数据库设计"><a href="#1-数据库设计" class="headerlink" title="1. 数据库设计"></a>1. 数据库设计</h3><ul><li>opn_app(应用表)：包含应用名称、应用状态、排序；</li><li>opn_app_clazz(应用分类表)：包含分类名称、分类状态、排序；</li><li>opn_app_clazz_ref_app(应用分类关联表)：应用id、分类id；</li><li>opn_app_detail(应用详情表)：维护信息、应用图片、应用属性、网站域名、网站地址、网站额外参数等。</li></ul><h3 id="2-数据库设计"><a href="#2-数据库设计" class="headerlink" title="2. 数据库设计"></a>2. 数据库设计</h3><ul><li>按照原型图分为应用清单和应用维护两部分</li><li>应用清单<ol><li>应用清单：传入分页信息，获取并返回所有应用；</li><li>新增应用：传入应用信息，（在进入manager层之前应将数据对象准备好，不然开启事务后数据库压力大）在manager层开启事务，同步新增opn_app、opn_app_detail和opn_app_clazz_ref_app表；先INSERT opn_app表，id为自动增长（插入后，自动增长的id会包装到对象里）；然后INSERT opn_app_detail表，id为自动增长，appid为opn_app自增长的id；最后INSERT opn_app_clazz_ref_app表，插入appId和clazzId（默认为0）。返回操作状态码；</li><li>更新应用：与新增应用接口类似，传入封装对象中塞入了应用id，不同的是只需要更新opn_app、opn_app_detail两张表，先根据传入的id和信息更新opn_app表，然后根据id查询出appId为id的opn_app_detail对象，并根据传入的信息更新它；最后返回状态码。</li><li>应用详情：传入应用id，根据应用id查询opn_app表和opn_app_detail表（appId），返回状态码以及封装的对象。</li></ol></li><li>应用维护<ol><li>分类清单：获取分类信息，查询opn_app_clazz表中所有信息，返回list。</li><li>应用列表：根据clazzId查询分类下的应用信息，共需查询opn_app_clazz_ref_app、opn_app和opn_app_detail表。先根据clazzId，查询出opn_app_clazz_ref_app表内的appIds；然后遍历appIds依次查询opn_app和opn_app_detail表，返回list。</li><li>应用详情：传入应用id，查询opn_app和opn_app_detail表，返回应用名称、应用状态、维护信息、排序等信息。</li><li>修改分类：传入应用id和clazzId，更新opn_app_clazz_ref_app表，返回操作状态码。</li><li>详情编辑：传入包装类，根据传入的对象更新opn_app和opn_app_detail表，返回操作结果。</li></ol></li></ul><h3 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h3><pre><code> 1. 数据库设计部分  * 表名：要注意前缀，同一模块的表应该相邻；简明知意，不要使用容易混淆的单词，必要时可使用别名，例如应用分类关联表，“分类”使用常用单词标记（class别名clazz，不应用sort表明类别，易于排序混淆）；  * 表字段：每张表格在设计字段的时候都应该具有五个基础字段（id,is_enable,create_time,update_time,update_usr_id）主键id；is_enable该行数据是否有效，0无效，1有效，设计为bit类型，默认值为b&#39;1&#39;；create_time,update_time创建时间和更新时间，存放时间戳，设计为bigint类型，长度为20。注意：在一些表示类型的字段上，一般设计为tinyint类型长度为1，但代码生成器会将该字段识别为Boolean类型，为了应对经常变化的业务需求，一般将其改为Integer类型。 2. 接口设计部分 * Controller层供前端调用，接口分布应与原型相对应； * 接口数量约少越好，插入、更新可以在一个接口里实现； * Controller层返回值类型不重要，可以统一写为Object； * Controller层只return service层的执行结果，返回结果包装可在service执行。</code></pre><h3 id="4-重点"><a href="#4-重点" class="headerlink" title="4. 重点"></a>4. 重点</h3><ol><li><p>service层只做参数校验，多表操作开启事务在manager层做；</p></li><li><p>在新增、更新和搜索等需要在文本框内输入的接口，在service层需要做防止xss注入操作（hutool：htmlFilter()方法）；</p></li><li><p>使用mybatis-plus插件，更新和插入的操作应当使用BaseMapper自带的insert和update，因为这样可以应对多变的需求及减少bug；</p></li><li><p>使用mybatis-plus插件向数据库插入一条id自增的数据，如果在生成代码阶段没有设置id为自动增长，那么插入数据库的id字段将会为很长的一段雪花值，是因为实体类id字段上没有正确添加注解，mybatis-plus默认为雪花值id；</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 分类id</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="meta">@TableId(value = &quot;id&quot;, type = IdType.AUTO)</span></span><br><span class="line">   <span class="keyword">private</span> Long id;</span><br><span class="line">   </span><br></pre></td></tr></table></figure></li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> SaaS </tag>
             
         </tags>
       
